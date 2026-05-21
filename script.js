@@ -1,49 +1,72 @@
 // Global Variables
 let currentStyle = 'basic';
 let calculatedMeasurements = {};
+let generatedSVGContent = '';
 
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ App initialized');
+    console.log('✅ App initialized successfully');
     
-    // Style buttons
+    // Initialize style buttons
+    initializeStyleButtons();
+    
+    // Initialize generate button
+    initializeGenerateButton();
+    
+    // Initialize download and print buttons
+    initializeActionButtons();
+});
+
+function initializeStyleButtons() {
     const styleButtons = document.querySelectorAll('.style-btn');
     styleButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             styleButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentStyle = this.dataset.style;
-            console.log('Style selected:', currentStyle);
+            console.log('🎨 Style selected:', currentStyle);
         });
     });
-    
-    // Generate button
+}
+
+function initializeGenerateButton() {
     const generateBtn = document.getElementById('generateBtn');
     if (generateBtn) {
         generateBtn.addEventListener('click', function(e) {
             e.preventDefault();
+            console.log('🔘 Generate Pattern button clicked');
             generatePattern();
         });
+    } else {
+        console.error('❌ Generate button not found!');
     }
-    
+}
+
+function initializeActionButtons() {
     // Download button
     const downloadBtn = document.getElementById('downloadSvg');
     if (downloadBtn) {
-        downloadBtn.addEventListener('click', downloadSVG);
+        downloadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            downloadSVG();
+        });
     }
     
     // Print button
     const printBtn = document.getElementById('printPattern');
     if (printBtn) {
-        printBtn.addEventListener('click', printPattern);
+        printBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            printPattern();
+        });
     }
-});
+}
 
 function generatePattern() {
-    console.log('🚀 Generating pattern...');
+    console.log('🚀 Starting pattern generation...');
     
     try {
-        // Get values
+        // Get all input values
         const blouseSize = parseFloat(document.getElementById('blouseSize').value);
         const blouseLength = parseFloat(document.getElementById('blouseLength').value);
         const chestSize = parseFloat(document.getElementById('chestSize').value);
@@ -53,17 +76,28 @@ function generatePattern() {
         const backNeckLength = parseFloat(document.getElementById('backNeckLength').value);
         const waistSize = parseFloat(document.getElementById('waistSize').value);
 
-        // Validate
+        console.log('📏 Input measurements:', {
+            blouseSize, blouseLength, chestSize, shoulderSize,
+            armRound, neckRound, backNeckLength, waistSize
+        });
+
+        // Validate all inputs
         if (!blouseSize || !blouseLength || !chestSize || !shoulderSize || 
             !armRound || !neckRound || !backNeckLength || !waistSize) {
-            alert('⚠️ Please fill in ALL fields!');
+            alert('⚠️ Please fill in ALL measurement fields!');
             return;
         }
 
-        // Calculate
+        // Calculate derived measurements
         calculatedMeasurements = {
-            blouseSize, blouseLength, chestSize, shoulderSize,
-            armRound, neckRound, backNeckLength, waistSize,
+            blouseSize,
+            blouseLength,
+            chestSize,
+            shoulderSize,
+            armRound,
+            neckRound,
+            backNeckLength,
+            waistSize,
             chestQuarter: chestSize / 4,
             shoulderHalf: shoulderSize / 2,
             armRoundHalf: armRound / 2,
@@ -74,175 +108,191 @@ function generatePattern() {
             armholeDepth: (armRound / 2) + 1
         };
 
-        console.log('Measurements:', calculatedMeasurements);
+        console.log('📐 Calculated measurements:', calculatedMeasurements);
 
         // Show pattern section
         const patternSection = document.getElementById('patternSection');
         if (patternSection) {
             patternSection.style.display = 'block';
+            console.log('✅ Pattern section displayed');
+        } else {
+            console.error('❌ patternSection element not found!');
         }
 
-        // Generate SVG
+        // Generate SVG pattern
         generateSVGPattern();
         
-        // Show measurements
-        displayMeasurements();
+        // Display measurements table
+        displayMeasurementsTable();
         
-        // Show instructions
+        // Display instructions
         displayInstructions();
 
-        // Scroll to pattern
+        // Scroll to pattern section
         setTimeout(() => {
-            patternSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (patternSection) {
+                patternSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }, 100);
         
-        console.log('✅ Pattern generated successfully!');
+        console.log('✅ Pattern generation completed successfully!');
         
     } catch (error) {
-        console.error('❌ Error:', error);
-        alert('Error: ' + error.message);
+        console.error('❌ Error in generatePattern:', error);
+        alert('Error generating pattern: ' + error.message);
     }
 }
 
 function generateSVGPattern() {
     const m = calculatedMeasurements;
-    const scale = 25; // pixels per inch
-    const padding = 80;
+    const scale = 20; // pixels per inch
     
     // Pattern dimensions
-    const patternWidth = m.chestQuarter * scale;
-    const patternHeight = m.blouseLength * scale;
-    const svgWidth = patternWidth + (padding * 2);
-    const svgHeight = patternHeight + (padding * 2);
+    const chestWidth = m.chestQuarter * scale;
+    const length = m.blouseLength * scale;
     
-    // Coordinates
-    const startX = padding;
-    const startY = padding;
-    
-    // Neck point
+    // Neck calculations
     const neckWidth = m.neckLoose * scale;
-    const neckDepth = m.neckDepth * scale;
+    const neckDepthPx = m.neckDepth * scale;
     
-    // Shoulder point
+    // Shoulder
     const shoulderWidth = m.shoulderHalf * scale;
     
     // Armhole
     const armholeDepth = m.armholeDepth * scale;
     
-    // Create SVG
-    const svg = `
-        <svg id="patternSvg" width="${svgWidth}" height="${svgHeight}" 
-             xmlns="http://www.w3.org/2000/svg" 
-             style="background: #fafafa; border: 2px solid #667eea; border-radius: 10px;">
-            
-            <!-- Title -->
-            <text x="${svgWidth/2}" y="30" text-anchor="middle" 
-                  font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">
-                ${currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1)} Back Pattern
-            </text>
-            <text x="${svgWidth/2}" y="50" text-anchor="middle" 
-                  font-family="Arial, sans-serif" font-size="12" fill="#666">
-                Size ${m.blouseSize} - Haseena Fashion World
-            </text>
-            
-            <!-- Grid -->
-            ${createGrid(startX, startY, patternWidth, patternHeight, scale)}
-            
-            <!-- Main pattern shape -->
-            <path d="M ${startX} ${startY}
-                     L ${startX + patternWidth} ${startY}
-                     L ${startX + patternWidth} ${startY + patternHeight}
-                     L ${startX} ${startY + patternHeight}
-                     Z"
-                  fill="#f0e6ff" 
-                  stroke="#667eea" 
-                  stroke-width="3"/>
-            
-            <!-- Neck curve -->
-            <path d="M ${startX} ${startY}
-                     Q ${startX + neckWidth} ${startY}
-                       ${startX + neckWidth} ${startY + neckDepth}"
-                  fill="none" 
-                  stroke="#e91e63" 
-                  stroke-width="2.5"
-                  stroke-dasharray="5,3"/>
-            
-            <!-- Shoulder line -->
-            <line x1="${startX}" y1="${startY}" 
-                  x2="${startX + shoulderWidth}" y2="${startY}"
-                  stroke="#333" 
-                  stroke-width="2" 
-                  stroke-dasharray="5,3"/>
-            
-            <!-- Armhole curve -->
-            <path d="M ${startX + shoulderWidth} ${startY}
-                     Q ${startX + shoulderWidth + 20} ${startY + armholeDepth/2}
-                       ${startX + patternWidth} ${startY + armholeDepth}"
-                  fill="none" 
-                  stroke="#e91e63" 
-                  stroke-width="2.5"/>
-            
-            <!-- Center back line -->
-            <line x1="${startX}" y1="${startY}"
-                  x2="${startX}" y2="${startY + patternHeight}"
-                  stroke="#333" 
-                  stroke-width="2" 
-                  stroke-dasharray="5,3"/>
-            
-            <!-- Side seam -->
-            <line x1="${startX + patternWidth}" y1="${startY}"
-                  x2="${startX + patternWidth}" y2="${startY + patternHeight}"
-                  stroke="#333" 
-                  stroke-width="2"/>
-            
-            <!-- Hem line -->
-            <line x1="${startX}" y1="${startY + patternHeight}"
-                  x2="${startX + patternWidth}" y2="${startY + patternHeight}"
-                  stroke="#333" 
-                  stroke-width="2"/>
-            
-            <!-- Measurements -->
-            <text x="${startX + patternWidth/2}" y="${startY - 10}" 
-                  text-anchor="middle" font-family="Arial" font-size="13" 
-                  fill="#667eea" font-weight="bold">
-                Chest: ${m.chestQuarter.toFixed(2)}"
-            </text>
-            
-            <text x="${startX - 10}" y="${startY + patternHeight/2}" 
-                  text-anchor="middle" font-family="Arial" font-size="13" 
-                  fill="#667eea" font-weight="bold"
-                  transform="rotate(-90 ${startX - 10} ${startY + patternHeight/2})">
-                Length: ${m.blouseLength}"
-            </text>
-            
-            <text x="${startX + shoulderWidth/2}" y="${startY + 20}" 
-                  text-anchor="middle" font-family="Arial" font-size="12" 
-                  fill="#e91e63" font-weight="bold">
-                Shoulder: ${m.shoulderHalf.toFixed(2)}"
-            </text>
-            
-            <text x="${startX + patternWidth + 10}" y="${startY + armholeDepth}" 
-                  text-anchor="start" font-family="Arial" font-size="12" 
-                  fill="#e91e63" font-weight="bold">
-                Armhole: ${m.armholeDepth.toFixed(1)}"
-            </text>
-            
-            <!-- Neck measurement -->
-            <text x="${startX + neckWidth/2}" y="${startY + neckDepth + 15}" 
-                  text-anchor="middle" font-family="Arial" font-size="11" 
-                  fill="#999">
-                Neck: ${m.neckLoose.toFixed(2)}" × ${m.neckDepth.toFixed(1)}"
-            </text>
-        </svg>
-    `;
+    // SVG dimensions with padding
+    const svgWidth = chestWidth + 200;
+    const svgHeight = length + 200;
+    const offsetX = 100;
+    const offsetY = 100;
     
-    // Insert SVG
+    // Create SVG string
+    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" 
+     width="${svgWidth}" 
+     height="${svgHeight}" 
+     viewBox="0 0 ${svgWidth} ${svgHeight}">
+    
+    <!-- Background -->
+    <rect width="100%" height="100%" fill="#fafafa"/>
+    
+    <!-- Title -->
+    <text x="${svgWidth/2}" y="40" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+        ${currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1)} Back Pattern
+    </text>
+    <text x="${svgWidth/2}" y="65" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="14" fill="#666">
+        Size ${m.blouseSize} - Haseena Fashion World
+    </text>
+    
+    <!-- Main pattern rectangle -->
+    <rect x="${offsetX}" y="${offsetY}" 
+          width="${chestWidth}" 
+          height="${length}"
+          fill="#f0e6ff" 
+          stroke="#667eea" 
+          stroke-width="3"/>
+    
+    <!-- Neck curve -->
+    <path d="M ${offsetX} ${offsetY} 
+             Q ${offsetX + neckWidth} ${offsetY} 
+               ${offsetX + neckWidth} ${offsetY + neckDepthPx}"
+          fill="none" 
+          stroke="#e91e63" 
+          stroke-width="2.5"
+          stroke-dasharray="5,3"/>
+    
+    <!-- Shoulder line -->
+    <line x1="${offsetX}" y1="${offsetY}" 
+          x2="${offsetX + shoulderWidth}" y2="${offsetY}"
+          stroke="#333" 
+          stroke-width="2" 
+          stroke-dasharray="5,3"/>
+    
+    <!-- Armhole curve -->
+    <path d="M ${offsetX + shoulderWidth} ${offsetY}
+             Q ${offsetX + shoulderWidth + 30} ${offsetY + armholeDepth/2}
+               ${offsetX + chestWidth} ${offsetY + armholeDepth}"
+          fill="none" 
+          stroke="#e91e63" 
+          stroke-width="2.5"/>
+    
+    <!-- Center back line -->
+    <line x1="${offsetX}" y1="${offsetY}"
+          x2="${offsetX}" y2="${offsetY + length}"
+          stroke="#333" 
+          stroke-width="2" 
+          stroke-dasharray="5,3"/>
+    
+    <!-- Side seam -->
+    <line x1="${offsetX + chestWidth}" y1="${offsetY}"
+          x2="${offsetX + chestWidth}" y2="${offsetY + length}"
+          stroke="#333" 
+          stroke-width="2"/>
+    
+    <!-- Hem line -->
+    <line x1="${offsetX}" y1="${offsetY + length}"
+          x2="${offsetX + chestWidth}" y2="${offsetY + length}"
+          stroke="#333" 
+          stroke-width="2"/>
+    
+    <!-- Measurement labels -->
+    <text x="${offsetX + chestWidth/2}" y="${offsetY - 15}" 
+          text-anchor="middle" font-family="Arial" font-size="14" 
+          fill="#667eea" font-weight="bold">
+        Chest: ${m.chestQuarter.toFixed(2)}"
+    </text>
+    
+    <text x="${offsetX - 15}" y="${offsetY + length/2}" 
+          text-anchor="middle" font-family="Arial" font-size="14" 
+          fill="#667eea" font-weight="bold"
+          transform="rotate(-90 ${offsetX - 15} ${offsetY + length/2})">
+        Length: ${m.blouseLength}"
+    </text>
+    
+    <text x="${offsetX + shoulderWidth/2}" y="${offsetY + 25}" 
+          text-anchor="middle" font-family="Arial" font-size="12" 
+          fill="#e91e63" font-weight="bold">
+        Shoulder: ${m.shoulderHalf.toFixed(2)}"
+    </text>
+    
+    <text x="${offsetX + chestWidth + 15}" y="${offsetY + armholeDepth}" 
+          text-anchor="start" font-family="Arial" font-size="12" 
+          fill="#e91e63" font-weight="bold">
+        Armhole: ${m.armholeDepth.toFixed(1)}"
+    </text>
+    
+    <!-- Grid pattern -->
+    ${createGrid(offsetX, offsetY, chestWidth, length, scale)}
+</svg>`;
+
+    // Store for download
+    generatedSVGContent = svgContent;
+    window.generatedSVG = svgContent;
+    
+    // Try to insert into patternContainer
     const patternContainer = document.getElementById('patternContainer');
     if (patternContainer) {
-        patternContainer.innerHTML = svg;
-        console.log('✅ SVG inserted into DOM');
+        patternContainer.innerHTML = svgContent;
+        console.log('✅ SVG pattern inserted into patternContainer');
     } else {
-        console.error('❌ patternContainer not found!');
+        console.error('❌ patternContainer not found! Creating it...');
+        createPatternContainer(svgContent);
+    }
+}
+
+function createPatternContainer(svgContent) {
+    // Find patternSection and add patternContainer if it doesn't exist
+    const patternSection = document.getElementById('patternSection');
+    if (patternSection) {
+        const container = document.createElement('div');
+        container.id = 'patternContainer';
+        container.className = 'pattern-container';
+        container.innerHTML = svgContent;
+        patternSection.appendChild(container);
+        console.log('✅ Created patternContainer dynamically');
     }
 }
 
@@ -265,7 +315,7 @@ function createGrid(ox, oy, width, height, spacing) {
     return grid;
 }
 
-function displayMeasurements() {
+function displayMeasurementsTable() {
     const m = calculatedMeasurements;
     const tbody = document.getElementById('measurementsBody');
     
@@ -305,7 +355,10 @@ function displayInstructions() {
     const m = calculatedMeasurements;
     const instructionsDiv = document.getElementById('instructionsText');
     
-    if (!instructionsDiv) return;
+    if (!instructionsDiv) {
+        console.error('❌ instructionsText not found!');
+        return;
+    }
     
     instructionsDiv.innerHTML = `
         <h3 style="color: #667eea; margin-bottom: 15px;">
@@ -337,20 +390,31 @@ function displayInstructions() {
             </ul>
         </div>
     `;
+    
+    console.log('✅ Instructions displayed');
 }
 
 function downloadSVG() {
     console.log('📥 Downloading SVG...');
     
-    const svgElement = document.getElementById('patternSvg');
-    if (!svgElement) {
-        alert('❌ No pattern generated yet!');
+    // Get SVG content
+    let svgContent = generatedSVGContent || window.generatedSVG;
+    
+    if (!svgContent) {
+        // Try to get from DOM
+        const svgElement = document.querySelector('#patternContainer svg');
+        if (svgElement) {
+            svgContent = svgElement.outerHTML;
+        }
+    }
+    
+    if (!svgContent) {
+        alert('❌ No pattern generated yet! Click "Generate Pattern" first.');
         return;
     }
     
     try {
-        const svgData = new XMLSerializer().serializeToString(svgElement);
-        const blob = new Blob([svgData], { type: 'image/svg+xml' });
+        const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         
         const link = document.createElement('a');
@@ -359,9 +423,10 @@ function downloadSVG() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
         
-        console.log('✅ SVG downloaded');
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        console.log('✅ SVG downloaded successfully');
     } catch (error) {
         console.error('❌ Download error:', error);
         alert('Error downloading: ' + error.message);
@@ -371,52 +436,56 @@ function downloadSVG() {
 function printPattern() {
     console.log('🖨️ Printing pattern...');
     
-    const svgElement = document.getElementById('patternSvg');
+    const svgElement = document.querySelector('#patternContainer svg');
     if (!svgElement) {
-        alert('❌ No pattern to print!');
+        alert('❌ No pattern to print! Generate a pattern first.');
         return;
     }
     
-    // Create print window
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Blouse Pattern - Size ${calculatedMeasurements.blouseSize}</title>
-            <style>
-                body { 
-                    margin: 0; 
-                    padding: 20px; 
-                    font-family: Arial, sans-serif;
-                }
-                svg { 
-                    max-width: 100%; 
-                    height: auto;
-                }
-                @media print {
-                    body { padding: 0; }
-                }
-            </style>
-        </head>
-        <body>
-            <h2 style="text-align: center; color: #667eea;">
-                ${currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1)} Back Pattern
-            </h2>
-            <p style="text-align: center; color: #666;">
-                Size ${calculatedMeasurements.blouseSize} - Haseena Fashion World
-            </p>
-            ${svgElement.outerHTML}
-            <script>
-                window.onload = function() {
-                    window.print();
-                    window.close();
-                };
-            </script>
-        </body>
-        </html>
-    `);
-    printWindow.document.close();
-    
-    console.log('✅ Print dialog opened');
+    try {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Blouse Pattern - Size ${calculatedMeasurements.blouseSize}</title>
+                <style>
+                    body { 
+                        margin: 0; 
+                        padding: 20px; 
+                        font-family: Arial, sans-serif;
+                    }
+                    svg { 
+                        max-width: 100%; 
+                        height: auto;
+                    }
+                    @media print {
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2 style="text-align: center; color: #667eea;">
+                    ${currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1)} Back Pattern
+                </h2>
+                <p style="text-align: center; color: #666;">
+                    Size ${calculatedMeasurements.blouseSize} - Haseena Fashion World
+                </p>
+                ${svgElement.outerHTML}
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.close();
+                    };
+                </script>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        
+        console.log('✅ Print dialog opened');
+    } catch (error) {
+        console.error('❌ Print error:', error);
+        alert('Error printing: ' + error.message);
+    }
 }
