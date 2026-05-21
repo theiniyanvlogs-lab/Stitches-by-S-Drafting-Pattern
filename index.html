@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧵 Blouse Pattern Generator - Haseena Fashion</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-ruler-combined"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="gradient-text">Blouse </span>
+                    <span class="gold-s">Pattern</span>
+                </div>
+            </div>
+            <p class="subtitle">Automatic Pattern Generator - Haseena Fashion World</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <h2><i class="fas fa-ruler"></i> Enter Measurements</h2>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-tshirt"></i> Blouse Size</label>
+                    <input type="number" id="blouseSize" placeholder="e.g., 32, 34, 36, 40" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-arrows-alt-v"></i> Blouse Length (inches)</label>
+                    <input type="number" id="blouseLength" placeholder="e.g., 15" step="0.5" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-arrows-alt-h"></i> Chest/Bust (inches)</label>
+                    <input type="number" id="chestSize" placeholder="e.g., 36" step="0.5" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-arrows-alt"></i> Shoulder (inches)</label>
+                    <input type="number" id="shoulderSize" placeholder="e.g., 13" step="0.5" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-circle-notch"></i> Arm Round (inches)</label>
+                    <input type="number" id="armRound" placeholder="e.g., 12" step="0.5" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-compress-arrows-alt"></i> Neck Round (inches)</label>
+                    <input type="number" id="neckRound" placeholder="e.g., 14" step="0.5" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-arrows-alt-v"></i> Back Neck Length (inches)</label>
+                    <input type="number" id="backNeckLength" placeholder="e.g., 8" step="0.5" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-ruler-vertical"></i> Waist (inches)</label>
+                    <input type="number" id="waistSize" placeholder="e.g., 30" step="0.5" required>
+                </div>
+            </div>
+
+            <!-- Style Selection -->
+            <div class="form-group">
+                <label><i class="fas fa-paint-brush"></i> Select Blouse Style</label>
+                <div class="style-options">
+                    <button class="style-btn active" data-style="basic">
+                        <i class="fas fa-square"></i> Basic Back
+                    </button>
+                    <button class="style-btn" data-style="boat">
+                        <i class="fas fa-water"></i> Boat Neck
+                    </button>
+                    <button class="style-btn" data-style="pot">
+                        <i class="fas fa-circle"></i> Pot Neck
+                    </button>
+                    <button class="style-btn" data-style="katori">
+                        <i class="fas fa-heart"></i> Katori
+                    </button>
+                    <button class="style-btn" data-style="temple">
+                        <i class="fas fa-gopuram"></i> Temple Neck
+                    </button>
+                    <button class="style-btn" data-style="cutwork">
+                        <i class="fas fa-cut"></i> Cut Work
+                    </button>
+                </div>
+            </div>
+
+            <button id="generateBtn" class="btn-generate">
+                <i class="fas fa-magic"></i> Generate Pattern
+            </button>
+        </div>
+
+        <!-- Pattern Display -->
+        <div class="pattern-section" id="patternSection" style="display: none;">
+            <div class="pattern-header">
+                <h2><i class="fas fa-drafting-compass"></i> Generated Pattern</h2>
+                <div class="pattern-actions">
+                    <button id="downloadSvg" class="btn-action">
+                        <i class="fas fa-download"></i> Download SVG
+                    </button>
+                    <button id="printPattern" class="btn-action">
+                        <i class="fas fa-print"></i> Print
+                    </button>
+                </div>
+            </div>
+
+            <div class="pattern-container">
+                <svg id="patternSvg" class="pattern-svg"></svg>
+            </div>
+
+            <!-- Measurements Table -->
+            <div class="measurements-table">
+                <h3><i class="fas fa-list"></i> Calculated Measurements</h3>
+                <div class="table-container">
+                    <table id="measurementsTable">
+                        <thead>
+                            <tr>
+                                <th>Measurement</th>
+                                <th>Value (inches)</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="measurementsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> Drafting Instructions</h3>
+                <div id="instructionsText"></div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            Powered by Haseena Fashion World
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
