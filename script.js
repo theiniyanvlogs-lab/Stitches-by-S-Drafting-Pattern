@@ -72,7 +72,7 @@ function generatePattern() {
             return;
         }
 
-        // Calculate all derived measurements
+        // Calculate all measurements exactly like the reference pattern
         calculatedMeasurements = {
             blouseSize,
             blouseLength,
@@ -82,22 +82,23 @@ function generatePattern() {
             neckRound,
             backNeckLength,
             waistSize,
-            // Basic calculations
-            chestQuarter: chestSize / 4,
+            // Derived measurements (exactly like reference)
+            chestQuarter: chestSize / 4, // e.g., 48/4 = 12
             shoulderHalf: shoulderSize / 2,
             armRoundHalf: armRound / 2,
             neckQuarter: neckRound / 4,
             waistQuarter: waistSize / 4,
-            // Derived measurements
-            neckLoose: (neckRound / 4) + 0.5,
-            neckDepth: backNeckLength,
-            armholeDepth: (armRound / 2) + 1,
-            neckWidth: (neckRound / 4) + 0.25,
-            // Waist shaping
-            waistReduction: (chestSize - waistSize) / 8,
-            // For pot neck
-            potNeckDepth: backNeckLength + 2,
-            potNeckWidth: (neckRound / 4) - 0.5
+            // Pot neck specific
+            neckLoose: 4, // Standard for pot neck
+            neckDeepLength: backNeckLength + 4, // e.g., 8+4 = 12
+            neckBoxLength: 3.5,
+            neckPotLength: backNeckLength + 0.5,
+            remainingShoulder: shoulderSize / 2 - 4,
+            armWholeBoxLength: 7,
+            armRoundValue: armRound / 2 + 2.5,
+            // Dimensions
+            totalWidth: (chestSize / 4) + 4, // 12 + 4 = 16
+            totalLength: blouseLength + 1 // 15 + 1 = 16
         };
 
         console.log('📐 Calculated measurements:', calculatedMeasurements);
@@ -107,7 +108,7 @@ function generatePattern() {
             patternSection.style.display = 'block';
         }
 
-        generateAccurateSVGPattern();
+        generateAccuratePattern();
         displayMeasurementsTable();
         displayInstructions();
 
@@ -125,57 +126,36 @@ function generatePattern() {
     }
 }
 
-function generateAccurateSVGPattern() {
+function generateAccuratePattern() {
     const m = calculatedMeasurements;
-    const scale = 25; // pixels per inch for better visibility
+    const scale = 30; // pixels per inch - larger for clarity
     
-    // Pattern base dimensions
-    const baseWidth = m.chestQuarter * scale;
-    const baseHeight = m.blouseLength * scale;
+    // Base dimensions from reference pattern
+    const chestW = m.chestQuarter; // e.g., 12"
+    const totalW = m.totalWidth; // e.g., 16"
+    const totalH = m.totalLength; // e.g., 16"
+    
+    // Neck measurements
+    const neckLoose = m.neckLoose; // 4"
+    const neckBoxL = m.neckBoxLength; // 3.5"
+    const neckDeep = m.neckDeepLength; // 12"
+    const neckPot = m.neckPotLength; // 8.5"
+    
+    // Shoulder & Armhole
+    const remainShoulder = m.remainingShoulder; // 3.5"
+    const armWholeBox = m.armWholeBoxLength; // 7"
+    const armRoundVal = m.armRoundValue; // 9.5"
     
     // SVG canvas with padding
-    const padding = 100;
-    const svgWidth = baseWidth + (padding * 2);
-    const svgHeight = baseHeight + (padding * 2);
+    const padding = 120;
+    const svgWidth = (totalW * scale) + (padding * 2);
+    const svgHeight = (totalH * scale) + (padding * 2);
     
-    // Origin point (top-left of pattern)
+    // Origin point
     const ox = padding;
     const oy = padding;
     
-    // Key measurement points
-    const neckW = m.neckWidth * scale;
-    const neckD = m.neckDepth * scale;
-    const shoulderW = m.shoulderHalf * scale;
-    const armholeD = m.armholeDepth * scale;
-    const waistW = m.waistQuarter * scale;
-    const waistRed = m.waistReduction * scale;
-    
-    // Generate style-specific pattern
-    let patternPath = '';
-    let annotations = '';
-    
-    switch(currentStyle) {
-        case 'basic':
-            patternPath = generateBasicBackPath(ox, oy, m, scale);
-            annotations = generateBasicAnnotations(ox, oy, m, scale);
-            break;
-        case 'pot':
-            patternPath = generatePotNeckPath(ox, oy, m, scale);
-            annotations = generatePotAnnotations(ox, oy, m, scale);
-            break;
-        case 'boat':
-            patternPath = generateBoatNeckPath(ox, oy, m, scale);
-            annotations = generateBoatAnnotations(ox, oy, m, scale);
-            break;
-        case 'katori':
-            patternPath = generateKatoriPath(ox, oy, m, scale);
-            annotations = generateKatoriAnnotations(ox, oy, m, scale);
-            break;
-        default:
-            patternPath = generateBasicBackPath(ox, oy, m, scale);
-            annotations = generateBasicAnnotations(ox, oy, m, scale);
-    }
-    
+    // Create SVG content
     const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" 
      width="${svgWidth}" 
@@ -186,29 +166,175 @@ function generateAccurateSVGPattern() {
     <rect width="100%" height="100%" fill="#ffffff"/>
     
     <!-- Title -->
-    <text x="${svgWidth/2}" y="40" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#333">
-        ${currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1)} Back Pattern
+    <text x="${svgWidth/2}" y="35" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#333">
+        ${m.blouseSize} SIZE BLOUSE BACK POT NECK DESIGN
     </text>
-    <text x="${svgWidth/2}" y="65" text-anchor="middle" 
-          font-family="Arial, sans-serif" font-size="14" fill="#666">
-        Size ${m.blouseSize} - Haseena Fashion World
+    <text x="${svgWidth/2}" y="55" text-anchor="middle" 
+          font-family="Arial, sans-serif" font-size="13" fill="#666">
+        Haseena Fashion World
     </text>
     
-    <!-- Grid -->
-    ${createGrid(ox, oy, baseWidth, baseHeight, scale)}
+    <!-- Grid Background -->
+    ${createGrid(ox, oy, totalW * scale, totalH * scale, scale)}
     
-    <!-- Pattern fill -->
-    <path d="${patternPath}" fill="#f0e6ff" stroke="#667eea" stroke-width="3"/>
+    <!-- Main Pattern Rectangle -->
+    <rect x="${ox}" y="${oy}" 
+          width="${chestW * scale}" 
+          height="${totalH * scale}"
+          fill="#fafafa" 
+          stroke="#333" 
+          stroke-width="2"/>
     
-    <!-- Annotations and measurements -->
-    ${annotations}
+    <!-- Extended width rectangle -->
+    <rect x="${ox}" y="${oy}" 
+          width="${totalW * scale}" 
+          height="${totalH * scale}"
+          fill="none" 
+          stroke="#333" 
+          stroke-width="2"/>
     
-    <!-- Scale indicator -->
-    <text x="${svgWidth - 80}" y="${svgHeight - 20}" 
-          font-family="Arial" font-size="12" fill="#999">
-        Scale: 1" = ${scale}px
+    <!-- Neck Box (left side) -->
+    <rect x="${ox}" y="${oy}" 
+          width="${neckLoose * scale}" 
+          height="${neckBoxL * scale}"
+          fill="none" 
+          stroke="#e91e63" 
+          stroke-width="2"/>
+    
+    <!-- Neck Pot Curve -->
+    <path d="M ${ox} ${oy + neckBoxL * scale}
+             Q ${ox + neckLoose * scale} ${oy + neckBoxL * scale}
+               ${ox + neckLoose * scale} ${oy + neckPot * scale}
+             Q ${ox + neckLoose * scale} ${oy + neckDeep * scale * 0.8}
+               ${ox} ${oy + neckDeep * scale}"
+          fill="none" 
+          stroke="#e91e63" 
+          stroke-width="2.5"/>
+    
+    <!-- Horizontal neck line -->
+    <line x1="${ox}" y1="${oy + neckBoxL * scale}"
+          x2="${ox + neckLoose * scale}" y2="${oy + neckBoxL * scale}"
+          stroke="#e91e63" stroke-width="1.5" stroke-dasharray="3,2"/>
+    
+    <!-- Vertical neck line -->
+    <line x1="${ox + neckLoose * scale}" y1="${oy}"
+          x2="${ox + neckLoose * scale}" y2="${oy + neckBoxL * scale}"
+          stroke="#e91e63" stroke-width="1.5"/>
+    
+    <!-- Shoulder line (top) -->
+    <line x1="${ox}" y1="${oy}" 
+          x2="${ox + (chestW - remainShoulder) * scale}" y2="${oy}"
+          stroke="#333" stroke-width="2" stroke-dasharray="5,3"/>
+    
+    <!-- Armhole Box -->
+    <rect x="${ox + chestW * scale}" y="${oy}" 
+          width="${remainShoulder * scale}" 
+          height="${armWholeBox * scale}"
+          fill="none" 
+          stroke="#2196f3" 
+          stroke-width="1.5" stroke-dasharray="3,2"/>
+    
+    <!-- Armhole Curve -->
+    <path d="M ${ox + (chestW - remainShoulder) * scale} ${oy}
+             Q ${ox + chestW * scale} ${oy + armWholeBox * scale * 0.5}
+               ${ox + chestW * scale} ${oy + armWholeBox * scale}"
+          fill="none" 
+          stroke="#e91e63" 
+          stroke-width="2.5"/>
+    
+    <!-- Side seam -->
+    <line x1="${ox + chestW * scale}" y1="${oy + armWholeBox * scale}"
+          x2="${ox + chestW * scale}" y2="${oy + totalH * scale}"
+          stroke="#333" stroke-width="2"/>
+    
+    <!-- Bottom line -->
+    <line x1="${ox}" y1="${oy + totalH * scale}"
+          x2="${ox + totalW * scale}" y2="${oy + totalH * scale}"
+          stroke="#333" stroke-width="2"/>
+    
+    <!-- Seam allowance (shaded area on right) -->
+    <rect x="${ox + totalW * scale - 2 * scale}" y="${oy + armWholeBox * scale}" 
+          width="${2 * scale}" 
+          height="${(totalH - armWholeBox) * scale}"
+          fill="#e0e0e0" 
+          stroke="#999" 
+          stroke-width="1"/>
+    
+    <!-- Diagonal hatching for seam allowance -->
+    ${createHatching(ox + totalW * scale - 2 * scale, oy + armWholeBox * scale, 2 * scale, (totalH - armWholeBox) * scale)}
+    
+    <!-- ===== MEASUREMENT LABELS ===== -->
+    
+    <!-- Top width measurements -->
+    <text x="${ox + neckLoose * scale / 2}" y="${oy - 15}" text-anchor="middle" 
+          font-family="Arial" font-size="14" fill="#e91e63" font-weight="bold">
+        ${neckLoose}"
     </text>
+    
+    <text x="${ox + neckLoose * scale + remainShoulder * scale / 2}" y="${oy - 15}" text-anchor="middle" 
+          font-family="Arial" font-size="14" fill="#2196f3" font-weight="bold">
+        ${remainShoulder.toFixed(1)}"
+    </text>
+    
+    <!-- Left side measurements -->
+    <text x="${ox - 15}" y="${oy + neckBoxL * scale / 2}" text-anchor="middle" 
+          font-family="Arial" font-size="13" fill="#e91e63" font-weight="bold"
+          transform="rotate(-90 ${ox - 15} ${oy + neckBoxL * scale / 2})">
+        ${neckBoxL}"
+    </text>
+    
+    <text x="${ox - 15}" y="${oy + neckBoxL * scale + (neckDeep - neckBoxL) * scale / 2}" text-anchor="middle" 
+          font-family="Arial" font-size="13" fill="#e91e63" font-weight="bold"
+          transform="rotate(-90 ${ox - 15} ${oy + neckBoxL * scale + (neckDeep - neckBoxL) * scale / 2})">
+        ${(neckDeep - neckBoxL).toFixed(1)}"
+    </text>
+    
+    <text x="${ox - 15}" y="${oy + neckDeep * scale + (totalH - neckDeep) * scale / 2}" text-anchor="middle" 
+          font-family="Arial" font-size="13" fill="#333" font-weight="bold"
+          transform="rotate(-90 ${ox - 15} ${oy + neckDeep * scale + (totalH - neckDeep) * scale / 2})">
+        ${(totalH - neckDeep).toFixed(1)}"
+    </text>
+    
+    <!-- Right side measurements -->
+    <text x="${ox + chestW * scale + 15}" y="${oy + armWholeBox * scale / 2}" text-anchor="start" 
+          font-family="Arial" font-size="13" fill="#2196f3" font-weight="bold">
+        ${armWholeBox}"
+    </text>
+    
+    <text x="${ox + chestW * scale + 15}" y="${oy + armWholeBox * scale + (armRoundVal - armWholeBox) * scale}" text-anchor="start" 
+          font-family="Arial" font-size="13" fill="#e91e63" font-weight="bold">
+        ${armRoundVal.toFixed(1)}"
+    </text>
+    
+    <!-- Chest measurement -->
+    <text x="${ox + chestW * scale / 2}" y="${oy + neckDeep * scale + 20}" text-anchor="middle" 
+          font-family="Arial" font-size="16" fill="#4caf50" font-weight="bold">
+        ${chestW.toFixed(1)}"
+    </text>
+    <text x="${ox + chestW * scale / 2}" y="${oy + neckDeep * scale + 38}" text-anchor="middle" 
+          font-family="Arial" font-size="12" fill="#666">
+        chest
+    </text>
+    
+    <!-- Bottom width -->
+    <text x="${ox + totalW * scale / 2}" y="${oy + totalH * scale + 25}" text-anchor="middle" 
+          font-family="Arial" font-size="14" fill="#333" font-weight="bold">
+        ${totalW.toFixed(1)}"
+    </text>
+    
+    <!-- Center back line -->
+    <line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + totalH * scale}" 
+          stroke="#333" stroke-width="1.5" stroke-dasharray="4,2"/>
+    
+    <!-- Horizontal reference lines -->
+    <line x1="${ox + neckLoose * scale}" y1="${oy + neckBoxL * scale}" 
+          x2="${ox + chestW * scale}" y2="${oy + neckBoxL * scale}" 
+          stroke="#999" stroke-width="0.5" stroke-dasharray="3,2"/>
+    
+    <line x1="${ox}" y1="${oy + neckDeep * scale}" 
+          x2="${ox + chestW * scale}" y2="${oy + neckDeep * scale}" 
+          stroke="#999" stroke-width="0.5" stroke-dasharray="3,2"/>
 </svg>`;
 
     generatedSVGContent = svgContent;
@@ -221,268 +347,28 @@ function generateAccurateSVGPattern() {
     }
 }
 
-function generateBasicBackPath(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    const neckW = m.neckWidth * scale;
-    const neckD = m.neckDepth * scale;
-    const shoulderW = m.shoulderHalf * scale;
-    const armholeD = m.armholeDepth * scale;
-    const waistW = m.waistQuarter * scale;
-    const waistRed = m.waistReduction * scale;
-    
-    return `M ${ox} ${oy}
-            L ${ox + w} ${oy}
-            L ${ox + w} ${oy + h}
-            L ${ox + waistW - waistRed} ${oy + h}
-            L ${ox} ${oy + h}
-            Z
-            
-            M ${ox} ${oy}
-            Q ${ox + neckW} ${oy} ${ox + neckW} ${oy + neckD}
-            
-            M ${ox + shoulderW} ${oy}
-            Q ${ox + shoulderW + 15} ${oy + armholeD * 0.3}
-              ${ox + w} ${oy + armholeD}`;
-}
-
-function generatePotNeckPath(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    const neckW = m.potNeckWidth * scale;
-    const neckD = m.potNeckDepth * scale;
-    const shoulderW = m.shoulderHalf * scale;
-    const armholeD = m.armholeDepth * scale;
-    const waistW = m.waistQuarter * scale;
-    const waistRed = m.waistReduction * scale;
-    
-    // Pot neck shape
-    return `M ${ox} ${oy}
-            L ${ox + w} ${oy}
-            L ${ox + w} ${oy + h}
-            L ${ox + waistW - waistRed} ${oy + h}
-            L ${ox} ${oy + h}
-            Z
-            
-            M ${ox} ${oy}
-            L ${ox + neckW} ${oy}
-            L ${ox + neckW} ${oy + neckD * 0.3}
-            Q ${ox + neckW + 20} ${oy + neckD * 0.6}
-              ${ox + neckW} ${oy + neckD}
-            Q ${ox + neckW - 20} ${oy + neckD * 1.2}
-              ${ox} ${oy + neckD * 0.8}
-            Z
-            
-            M ${ox + shoulderW} ${oy}
-            Q ${ox + shoulderW + 15} ${oy + armholeD * 0.3}
-              ${ox + w} ${oy + armholeD}`;
-}
-
-function generateBoatNeckPath(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    const neckW = m.neckWidth * scale;
-    const shoulderW = m.shoulderHalf * scale;
-    const armholeD = m.armholeDepth * scale;
-    const waistW = m.waistQuarter * scale;
-    const waistRed = m.waistReduction * scale;
-    
-    return `M ${ox} ${oy}
-            L ${ox + w} ${oy}
-            L ${ox + w} ${oy + h}
-            L ${ox + waistW - waistRed} ${oy + h}
-            L ${ox} ${oy + h}
-            Z
-            
-            M ${ox} ${oy}
-            Q ${ox + w/2} ${oy + neckW * 0.5} ${ox + w} ${oy}
-            
-            M ${ox + shoulderW} ${oy}
-            Q ${ox + shoulderW + 15} ${oy + armholeD * 0.3}
-              ${ox + w} ${oy + armholeD}`;
-}
-
-function generateKatoriPath(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    const neckW = m.neckWidth * scale;
-    const neckD = m.neckDepth * scale;
-    const shoulderW = m.shoulderHalf * scale;
-    const armholeD = m.armholeDepth * scale;
-    const waistW = m.waistQuarter * scale;
-    const waistRed = m.waistReduction * scale;
-    
-    // Katori curve - fitted side seam
-    const katoriStart = h * 0.4;
-    
-    return `M ${ox} ${oy}
-            L ${ox + w} ${oy}
-            L ${ox + w} ${oy + katoriStart}
-            Q ${ox + w - 20} ${oy + h * 0.6}
-              ${ox + waistW - waistRed} ${oy + h}
-            L ${ox} ${oy + h}
-            Z
-            
-            M ${ox} ${oy}
-            Q ${ox + neckW} ${oy} ${ox + neckW} ${oy + neckD}
-            
-            M ${ox + shoulderW} ${oy}
-            Q ${ox + shoulderW + 15} ${oy + armholeD * 0.3}
-              ${ox + w} ${oy + armholeD}`;
-}
-
-function generateBasicAnnotations(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    
-    return `
-        <!-- Chest measurement -->
-        <text x="${ox + w/2}" y="${oy - 15}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold">
-            Chest: ${m.chestQuarter.toFixed(2)}"
-        </text>
-        
-        <!-- Length measurement -->
-        <text x="${ox - 15}" y="${oy + h/2}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold"
-              transform="rotate(-90 ${ox - 15} ${oy + h/2})">
-            Length: ${m.blouseLength}"
-        </text>
-        
-        <!-- Shoulder measurement -->
-        <text x="${ox + (m.shoulderHalf * scale)/2}" y="${oy + 20}" 
-              text-anchor="middle" font-family="Arial" font-size="12" 
-              fill="#e91e63" font-weight="bold">
-            Shoulder: ${m.shoulderHalf.toFixed(2)}"
-        </text>
-        
-        <!-- Armhole measurement -->
-        <text x="${ox + w + 15}" y="${oy + m.armholeDepth * scale}" 
-              text-anchor="start" font-family="Arial" font-size="12" 
-              fill="#e91e63" font-weight="bold">
-            Armhole: ${m.armholeDepth.toFixed(1)}"
-        </text>
-        
-        <!-- Center back line -->
-        <line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + h}" 
-              stroke="#333" stroke-width="2" stroke-dasharray="5,3"/>
-        
-        <!-- Waist line -->
-        <line x1="${ox}" y1="${oy + h * 0.7}" x2="${ox + m.waistQuarter * scale - m.waistReduction * scale}" y2="${oy + h * 0.7}" 
-              stroke="#e91e63" stroke-width="1.5" stroke-dasharray="3,3"/>
-        
-        <!-- Waist measurement -->
-        <text x="${ox + w/2}" y="${oy + h * 0.7 - 10}" text-anchor="middle" 
-              font-family="Arial" font-size="11" fill="#e91e63">
-            Waist: ${m.waistQuarter.toFixed(2)}"
-        </text>
-    `;
-}
-
-function generatePotAnnotations(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    
-    return `
-        <text x="${ox + w/2}" y="${oy - 15}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold">
-            Chest: ${m.chestQuarter.toFixed(2)}"
-        </text>
-        
-        <text x="${ox - 15}" y="${oy + h/2}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold"
-              transform="rotate(-90 ${ox - 15} ${oy + h/2})">
-            Length: ${m.blouseLength}"
-        </text>
-        
-        <!-- Pot neck annotation -->
-        <text x="${ox + m.potNeckWidth * scale + 20}" y="${oy + m.potNeckDepth * scale / 2}" 
-              text-anchor="start" font-family="Arial" font-size="12" 
-              fill="#e91e63" font-weight="bold">
-            Pot Neck: ${m.potNeckDepth.toFixed(1)}" deep
-        </text>
-        
-        <!-- Center back -->
-        <line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + h}" 
-              stroke="#333" stroke-width="2" stroke-dasharray="5,3"/>
-        
-        <!-- Shoulder line -->
-        <line x1="${ox}" y1="${oy}" x2="${ox + m.shoulderHalf * scale}" y2="${oy}" 
-              stroke="#333" stroke-width="2" stroke-dasharray="5,3"/>
-    `;
-}
-
-function generateBoatAnnotations(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    
-    return `
-        <text x="${ox + w/2}" y="${oy - 15}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold">
-            Chest: ${m.chestQuarter.toFixed(2)}"
-        </text>
-        
-        <text x="${ox - 15}" y="${oy + h/2}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold"
-              transform="rotate(-90 ${ox - 15} ${oy + h/2})">
-            Length: ${m.blouseLength}"
-        </text>
-        
-        <!-- Boat neck annotation -->
-        <text x="${ox + w/2}" y="${oy + m.neckWidth * scale + 20}" 
-              text-anchor="middle" font-family="Arial" font-size="12" 
-              fill="#e91e63" font-weight="bold">
-            Boat Neck: ${m.neckWidth.toFixed(2)}" wide
-        </text>
-        
-        <line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + h}" 
-              stroke="#333" stroke-width="2" stroke-dasharray="5,3"/>
-    `;
-}
-
-function generateKatoriAnnotations(ox, oy, m, scale) {
-    const w = m.chestQuarter * scale;
-    const h = m.blouseLength * scale;
-    
-    return `
-        <text x="${ox + w/2}" y="${oy - 15}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold">
-            Chest: ${m.chestQuarter.toFixed(2)}"
-        </text>
-        
-        <text x="${ox - 15}" y="${oy + h/2}" text-anchor="middle" 
-              font-family="Arial" font-size="14" fill="#667eea" font-weight="bold"
-              transform="rotate(-90 ${ox - 15} ${oy + h/2})">
-            Length: ${m.blouseLength}"
-        </text>
-        
-        <!-- Katori curve annotation -->
-        <text x="${ox + w + 20}" y="${oy + h * 0.6}" 
-              text-anchor="start" font-family="Arial" font-size="12" 
-              fill="#e91e63" font-weight="bold">
-            Katori Curve
-        </text>
-        
-        <line x1="${ox}" y1="${oy}" x2="${ox}" y2="${oy + h}" 
-              stroke="#333" stroke-width="2" stroke-dasharray="5,3"/>
-    `;
-}
-
-function createGrid(ox, oy, width, height, scale) {
+function createGrid(ox, oy, width, height, spacing) {
     let grid = '';
-    const gridSize = scale; // 1 inch grid
-    
-    for (let x = ox; x <= ox + width; x += gridSize) {
+    for (let x = ox; x <= ox + width; x += spacing) {
         grid += `<line x1="${x}" y1="${oy}" x2="${x}" y2="${oy + height}" 
-                     stroke="#f0f0f0" stroke-width="0.5"/>`;
+                     stroke="#f5f5f5" stroke-width="0.5"/>`;
     }
-    
-    for (let y = oy; y <= oy + height; y += gridSize) {
+    for (let y = oy; y <= oy + height; y += spacing) {
         grid += `<line x1="${ox}" y1="${y}" x2="${ox + width}" y2="${y}" 
-                     stroke="#f0f0f0" stroke-width="0.5"/>`;
+                     stroke="#f5f5f5" stroke-width="0.5"/>`;
     }
-    
     return grid;
+}
+
+function createHatching(x, y, width, height) {
+    let hatching = '';
+    const spacing = 10;
+    for (let i = -height; i < width + height; i += spacing) {
+        hatching += `<line x1="${x + i}" y1="${y}" 
+                         x2="${x + i - height}" y2="${y + height}" 
+                         stroke="#bbb" stroke-width="1"/>`;
+    }
+    return hatching;
 }
 
 function displayMeasurementsTable() {
@@ -493,19 +379,20 @@ function displayMeasurementsTable() {
     
     const measurements = [
         ['Blouse Size', m.blouseSize, 'Input size'],
-        ['Full Length', m.blouseLength, 'Total length'],
-        ['Chest (Full)', m.chestSize, 'Full chest'],
+        ['Blouse Length', m.blouseLength, 'Full length'],
+        ['Chest', m.chestSize, 'Full chest'],
         ['Chest (1/4)', m.chestQuarter.toFixed(2), 'For pattern'],
-        ['Shoulder (Full)', m.shoulderSize, 'Full shoulder'],
-        ['Shoulder (1/2)', m.shoulderHalf.toFixed(2), 'Half shoulder'],
-        ['Arm Round', m.armRound, 'Arm circumference'],
-        ['Armhole Depth', m.armholeDepth.toFixed(2), 'Calculated'],
-        ['Neck Round', m.neckRound, 'Neck circumference'],
-        ['Neck Loose', m.neckLoose.toFixed(2), 'Neck + ease'],
-        ['Back Neck Length', m.backNeckLength, 'Neck depth'],
-        ['Waist (Full)', m.waistSize, 'Full waist'],
-        ['Waist (1/4)', m.waistQuarter.toFixed(2), 'For pattern'],
-        ['Waist Reduction', m.waistReduction.toFixed(2), 'Side seam taper']
+        ['Shoulder', m.shoulderSize, 'Full shoulder'],
+        ['Remaining Shoulder', m.remainingShoulder.toFixed(2), 'For armhole'],
+        ['Arm Round', m.armRound, 'Full arm'],
+        ['Arm Whole Box', m.armWholeBoxLength, 'Armhole depth'],
+        ['Neck Round', m.neckRound, 'Full neck'],
+        ['Neck Loose', m.neckLoose, 'Neck width'],
+        ['Neck Box Length', m.neckBoxLength, 'Box depth'],
+        ['Neck Pot Length', m.neckPotLength, 'Pot depth'],
+        ['Neck Deep Length', m.neckDeepLength, 'Total neck depth'],
+        ['Back Neck Length', m.backNeckLength, 'Input back neck'],
+        ['Waist', m.waistSize, 'Full waist']
     ];
     
     tbody.innerHTML = measurements.map(([name, value, notes]) => `
@@ -523,42 +410,26 @@ function displayInstructions() {
     
     if (!instructionsDiv) return;
     
-    const styleNames = {
-        basic: 'Basic Back',
-        pot: 'Pot Neck',
-        boat: 'Boat Neck',
-        katori: 'Katori'
-    };
-    
     instructionsDiv.innerHTML = `
         <h3 style="color: #667eea; margin-bottom: 15px;">
-            <i class="fas fa-info-circle"></i> Drafting Instructions - ${styleNames[currentStyle]}
+            <i class="fas fa-info-circle"></i> Drafting Instructions
         </h3>
         <ol style="line-height: 1.8; padding-left: 20px;">
-            <li>Draw rectangle: <strong>${m.chestQuarter.toFixed(2)}" × ${m.blouseLength}"</strong></li>
+            <li>Draw rectangle: <strong>${m.totalWidth.toFixed(1)}" × ${m.totalLength.toFixed(1)}"</strong></li>
             
-            <li><strong>Center Back:</strong> Left edge is fold line</li>
+            <li><strong>Neck Box:</strong> Mark ${m.neckLoose}" wide × ${m.neckBoxLength}" deep at top-left</li>
             
-            <li><strong>Neck:</strong> 
-                <ul>
-                    <li>Width: ${m.neckWidth.toFixed(2)}" from top-left</li>
-                    <li>Depth: ${m.neckDepth}" down</li>
-                    <li>Draw smooth curve</li>
-                </ul>
-            </li>
+            <li><strong>Neck Pot:</strong> Draw curve from neck box to depth ${m.neckPotLength}"</li>
             
-            <li><strong>Shoulder:</strong> ${m.shoulderHalf.toFixed(2)}" from left at top</li>
+            <li><strong>Shoulder:</strong> Mark ${m.remainingShoulder.toFixed(1)}" remaining from chest width</li>
             
-            <li><strong>Armhole:</strong> 
-                <ul>
-                    <li>Depth: ${m.armholeDepth.toFixed(1)}"</li>
-                    <li>Curve from shoulder to side seam</li>
-                </ul>
-            </li>
+            <li><strong>Armhole Box:</strong> ${m.armWholeBoxLength}" deep from top-right</li>
             
-            <li><strong>Side Seam:</strong> Taper to waist (${m.waistQuarter.toFixed(2)}")</li>
+            <li><strong>Armhole Curve:</strong> Connect shoulder to armhole depth with smooth curve</li>
             
-            <li>Add <strong>0.5" seam allowance</strong> on all edges</li>
+            <li><strong>Chest Width:</strong> ${m.chestQuarter.toFixed(1)}" (1/4 of chest)</li>
+            
+            <li>Add <strong>2" seam allowance</strong> on right side (shaded area)</li>
         </ol>
     `;
 }
@@ -623,9 +494,9 @@ function printPattern() {
             </head>
             <body>
                 <h2 style="text-align: center; color: #667eea;">
-                    ${currentStyle.charAt(0).toUpperCase() + currentStyle.slice(1)} Back Pattern
+                    ${calculatedMeasurements.blouseSize} SIZE BLOUSE BACK POT NECK DESIGN
                 </h2>
-                <p style="text-align: center; color: #666;">Size ${calculatedMeasurements.blouseSize}</p>
+                <p style="text-align: center; color: #666;">Haseena Fashion World</p>
                 ${svgElement.outerHTML}
                 <script>window.onload = function() { window.print(); window.close(); };</script>
             </body>
