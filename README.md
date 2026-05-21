@@ -14,4 +14,4 @@ Automatic blouse pattern drafting tool based on Haseena Fashion World measuremen
 3. Click Generate Pattern
 4. Download or Print
 
-**Powered by Haseena Fashion World**
+**Powered by @IAC**
